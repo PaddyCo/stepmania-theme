@@ -1,4 +1,4 @@
-scrolling_text_banner_mt = {
+local scrolling_text_banner_mt = {
   __index = {
     create_actors = function(self, y, text)
       self.text = text
