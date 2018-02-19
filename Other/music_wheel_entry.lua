@@ -79,19 +79,23 @@ function MusicWheelEntry:create_actors(params)
   -- Background
   t[#t+1] = Def.Quad {
     InitCommand = function(subself)
+      self.mask = subself
+
       subself:diffuse(Alpha(ThemeColor.Black, 0.2))
              :diffuseleftedge(Alpha(ThemeColor.Black, 0.8))
-             :zoomto(SCREEN_WIDTH/2 + 128, 62)
+             :zoomto(SCREEN_WIDTH/2 + 128, 60)
+             :x(3)
              :y(1)
              :halign(0)
-    end
+    end,
   }
 
 
   -- Background focus background
   t[#t+1] = Def.Quad {
     InitCommand = function(subself)
-      subself:zoomto(0, 62)
+      subself:zoomto(0, 60)
+             :x(3)
              :y(1)
              :halign(0)
              :diffuse(ThemeColor.Red)
@@ -99,9 +103,9 @@ function MusicWheelEntry:create_actors(params)
 
     ScrollCommand = function(subself)
       if (self.is_focused) then
-      subself:stoptweening()
-             :linear(0.2)
-             :zoomtowidth(SCREEN_WIDTH/2 + 128)
+        subself:stoptweening()
+               :linear(0.2)
+               :zoomtowidth(SCREEN_WIDTH/2 + 128)
       else
         subself:stoptweening()
                :linear(0.15)
@@ -110,8 +114,8 @@ function MusicWheelEntry:create_actors(params)
     end,
 
     PageSwitchCommand = function(subself)
-      subself:zoomtowidth(0)
-             :sleep(0.5)
+      subself:stoptweening()
+             :zoomtowidth(0)
              :queuecommand("Scroll")
     end,
 
@@ -121,18 +125,52 @@ function MusicWheelEntry:create_actors(params)
     end
   }
 
+  -- Difficulty Segment Background
+  t[#t+1] = Def.Sprite {
+    Name = "Difficulty Segment",
+    Texture = THEME:GetPathG("", "MusicWheel/DifficultySegment.png"),
+    InitCommand = function(subself)
+      subself:y(1)
+             :x(10)
+             :basealpha(0.5)
+             :zoom(0.5)
+             :halign(0)
+    end,
+
+    UpdateCommand = function(subself)
+      subself:visible(self.data.type == "Song")
+    end,
+
+    ScrollCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    PageSwitchCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    OnCloseGroupCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    OnOpenGroupCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+  }
+
   -- Title
   t[#t+1] = Def.BitmapText {
     Font = "Common Normal",
     InitCommand = function(subself)
       subself:diffuse(ThemeColor.White)
-             :diffusebottomedge(Brightness(ThemeColor.White, 0.8))
+             :shadowcolor(ThemeColor.Black)
+             :shadowlength(1)
              :halign(0)
     end,
 
     UpdateCommand = function(subself)
       subself:settext(self.data.title)
-             :x(self.data.type == "Song" and 64+16 or 16)
+             :x(self.data.type == "Song" and 64+24 or 16)
     end,
 
     ScrollCommand = function(subself)
@@ -158,23 +196,17 @@ function MusicWheelEntry:create_actors(params)
     Font = "MusicWheel Difficulty",
     InitCommand = function(subself)
       subself:diffuse(ThemeColor.White)
-      :x(40)
-      :visible(false)
-      :shadowcolor(ThemeColor.Black)
-      :shadowlength(1)
-      :horizalign("HorizAlign_Center")
+             :x(40)
+             :visible(false)
+             :horizalign("HorizAlign_Center")
     end,
 
     UpdateCommand = function(subself)
       if (self.data.type == "Song") then
-        local color = DifficultyColors[self.data.difficulty]
-        local hsv_color = ColorToHSV(color)
 
         subself:settext(self.data.level)
-        :diffuse(color)
-        :diffusetopedge(color)
-        :diffusebottomedge(Hue(color, hsv_color.Hue + 25))
-        :visible(true)
+               :diffuse(DifficultyColors[self.data.difficulty])
+               :visible(true)
       else
         subself:visible(false)
       end
@@ -197,33 +229,74 @@ function MusicWheelEntry:create_actors(params)
     end,
   }
 
-  -- Clear lamp
-  t[#t+1] = Def.Quad {
-    Name = "Clear Lamp",
+
+  -- Clear lamp (Off)
+  t[#t+1] = Def.Sprite {
+    Name = "Clear Lamp - Off",
+    Texture = THEME:GetPathG("", "MusicWheel/ClearLampOff.png"),
     InitCommand = function(subself)
-      subself:zoomto(8, 62)
-      :y(1)
-      :visible(false)
-      :halign(0)
+      subself:y(1)
+             :zoom(0.5)
+             :diffuse(ThemeColor.Black)
+             :visible(false)
+             :halign(0)
+    end,
+
+    UpdateCommand = function(subself)
+      subself:visible(self.data.type == "Song" and self.data.score == nil)
+    end,
+
+    ScrollCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    PageSwitchCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    OnCloseGroupCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    OnOpenGroupCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+  }
+
+
+
+  -- Clear lamp
+  t[#t+1] = Def.Sprite {
+    Name = "Clear Lamp",
+    Texture = THEME:GetPathG("", "MusicWheel/ClearLamp.png"),
+    InitCommand = function(subself)
+      subself:y(1)
+             :zoom(0.5)
+             :x(-38)
+             :visible(false)
+             :halign(0)
     end,
 
     UpdateCommand = function(subself)
       -- TODO: Fix flashing lights being stuck during scrolling
       -- and make them all sync with a global timer or something
+
       subself:stoptweening()
       if (self.data.type == "Song") then
         subself:visible(true)
-        :diffuse(ThemeColor.Black)
-
+               :diffuse(ThemeColor.Black)
         if (self.data.score == nil) then
           -- No play
+          subself:visible(false)
           return
         end
 
+        subself:SetStateProperties({{ Frame = 0, Delay = 100 }})
+
         if (self.data.score.grade == "Grade_Failed") then
           -- Failed
-          subself.flash_speed = 0.2
-          subself.flash_colors = { ThemeColor.Red, ThemeColor.Black }
+          subself.flash_speed = 0.03
+          subself.flash_colors = { ThemeColor.Red, Brightness(ThemeColor.Red, 0.8) }
           subself:queuecommand("Flash")
         elseif table.find_index(self.data.score.award, { "StageAward_FullComboW3", "StageAward_SingleDigitW3", "StageAward_OneW3" }) ~= -1 then
           -- Full Combo Clear
@@ -253,7 +326,7 @@ function MusicWheelEntry:create_actors(params)
       subself:stoptweening()
       for i, color in ipairs(subself.flash_colors) do
         subself:diffuse(color)
-        :sleep(subself.flash_speed)
+               :sleep(subself.flash_speed)
       end
 
       subself:queuecommand("Flash")
