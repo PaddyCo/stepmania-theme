@@ -14,6 +14,38 @@ function MusicWheelEntry:create_actors(params)
   local container = Def.ActorFrame {
     InitCommand = function(subself)
       self.container = subself
+    end,
+
+    PlayPreviewCommand = function(subself)
+      if self.is_focused then
+        if self.data.type == "Song" then
+          SOUND:PlayMusicPart(self.data.music_preview.path, self.data.music_preview.sample_start, self.data.music_preview.sample_length, 1, 1, true, true)
+        else
+          SOUND:StopMusic()
+        end
+      end
+    end,
+
+    OffCommand = function(subself)
+      SOUND:StopMusic()
+    end,
+
+    ScrollCommand = function(subself)
+      subself:sleep(0.1)
+             :queuecommand("PlayPreview")
+    end,
+
+    PageSwitchCommand = function(subself)
+      subself:sleep(0.1)
+             :queuecommand("PlayPreview")
+    end,
+
+    OpenGroupCommand = function(subself)
+      SOUND:StopMusic()
+    end,
+
+    CloseGroupCommand = function(subself)
+      SOUND:StopMusic()
     end
   }
 

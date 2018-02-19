@@ -1,4 +1,5 @@
 dofile(THEME:GetPathO("", "music_wheel_entry.lua"))
+dofile(THEME:GetPathO("", "music_wheel_song_view.lua"))
 dofile(THEME:GetPathO("", "entry_data.lua"))
 
 MusicWheel = {}
@@ -10,8 +11,9 @@ function MusicWheel.create(sort_func)
 
   self.sort_func = sort_func
   self.current_group = nil
-  -- Attach an item_scroller
+
   self.scroller = setmetatable({}, item_scroller_mt)
+  self.song_view = MusicWheelSongView:create()
 
   return self
 end
@@ -29,7 +31,9 @@ function MusicWheel:create_actors()
     end,
   }
 
-  t[#t+1] = self.scroller:create_actors("Entry", 26, MusicWheelEntry_mt, SCREEN_CENTER_X, -293)
+  t[#t+1] = self.song_view:create_actors("Entry", 26, MusicWheelEntry_mt, SCREEN_CENTER_X + 128, -293)
+
+  t[#t+1] = self.scroller:create_actors("Entry", 26, MusicWheelEntry_mt, SCREEN_CENTER_X + 128, -293)
 
   t[#t+1] = Def.Actor {
     OnCommand = function(subself)
@@ -63,7 +67,9 @@ function MusicWheel:get_entries()
 end
 
 function MusicWheel:update()
- -- self.container:queuecommand("Update")
+  self.song_view.container:queuecommand("Update")
+  local current_entry = self.scroller:get_info_at_focus_pos()
+  self.song_view:set_current_entry(current_entry)
 end
 
 function MusicWheel:open_group(group_name)
@@ -94,6 +100,7 @@ end
 function MusicWheel:scroll(amount)
   self.scroller:scroll_by_amount(amount)
 
+
   if math.abs(amount) == 1 then
     self.container:queuecommand("Scroll")
   else
@@ -101,6 +108,9 @@ function MusicWheel:scroll(amount)
   end
 
   SOUND:PlayOnce(THEME:GetPathS("Common", "value"), true)
+
+  local current_entry = self.scroller:get_info_at_focus_pos()
+  self.song_view:set_current_entry(current_entry)
 end
 
 function MusicWheel.handle_input(event)

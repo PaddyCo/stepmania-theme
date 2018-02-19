@@ -42,6 +42,7 @@ local main_menu_mt = {
           UpdateCommand = function(subself)
             if i == current_main_menu_index and CurrentBackground ~= nil then
               top_background_color = option.color
+              bottom_background_color = ThemeColor.White
               CurrentBackground:queuecommand("Update")
             end
 

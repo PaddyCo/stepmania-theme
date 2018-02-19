@@ -26,9 +26,19 @@ function SongEntryData.create(song, steps)
   self.title = song:GetMainTitle()
   self.color = SONGMAN:GetSongColor(song)
   self.difficulty = steps:GetDifficulty()
+  self.music_preview  = {
+    path = song:GetPreviewMusicPath(),
+    sample_start = song:GetSampleStart(),
+    sample_length = song:GetSampleLength()
+  }
+  self.banner = song:GetBannerPath()
+  self.jacket = song:GetJacketPath()
   self.level = steps:GetMeter()
   self.score = nil
-
+  self.artist = song:GetDisplayArtist()
+  self.group = song:GetGroupName()
+  self.subtitle = song:GetDisplaySubTitle()
+  self.bpm = table.map(song:GetDisplayBpms(), function(b) return math.floor(b) end)
 
   -- TODO: Deal with profiles
   local current_profile = PROFILEMAN:GetProfile("PlayerNumber_P1")
