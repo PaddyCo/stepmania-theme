@@ -29,7 +29,7 @@ function MusicWheel:create_actors()
     end,
   }
 
-  t[#t+1] = self.scroller:create_actors("Entry", 26, MusicWheelEntry_mt, SCREEN_CENTER_X, -292)
+  t[#t+1] = self.scroller:create_actors("Entry", 26, MusicWheelEntry_mt, SCREEN_CENTER_X, -293)
 
   t[#t+1] = Def.Actor {
     OnCommand = function(subself)
@@ -63,7 +63,7 @@ function MusicWheel:get_entries()
 end
 
 function MusicWheel:update()
-  self.container:queuecommand("Update")
+ -- self.container:queuecommand("Update")
 end
 
 function MusicWheel:open_group(group_name)
@@ -93,6 +93,13 @@ end
 
 function MusicWheel:scroll(amount)
   self.scroller:scroll_by_amount(amount)
+
+  if math.abs(amount) == 1 then
+    self.container:queuecommand("Scroll")
+  else
+    self.container:queuecommand("PageSwitch")
+  end
+
   SOUND:PlayOnce(THEME:GetPathS("Common", "value"), true)
 end
 

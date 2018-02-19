@@ -26,22 +26,32 @@ function MusicWheelEntry:create_actors(params)
   end
 
   local t = Def.ActorFrame {
-    UpdateCommand = function(subself)
-      subself:linear(0.1)
+    OnCommand = function(subself)
+      subself:queuecommand("Scroll")
+    end,
+
+    ScrollCommand = function(subself)
+      subself:stoptweening()
+             :linear(0.1)
              :x(get_x())
-             :queuecommand("AfterUpdate")
-      self.last_type = self.data.type
+    end,
+
+    PageSwitchCommand = function(subself)
+      subself:stoptweening()
+             :x(get_x())
     end,
 
     OpenGroupCommand = function(subself)
       if self.data.type == "Group" then
         subself:finishtweening()
-               :queuecommand("AfterUpdate")
+               :queuecommand("OnOpenGroup")
+               :linear(0.1)
+               :x(get_x())
       else
         subself:finishtweening()
                :tween(0.2, "TweenType_Accelerate")
                :x(SCREEN_WIDTH/2 + 128)
-               :queuecommand("AfterUpdate")
+               :queuecommand("OnOpenGroup")
                :tween(0.2, "TweenType_Decelerate")
                :x(get_x())
       end
@@ -50,14 +60,16 @@ function MusicWheelEntry:create_actors(params)
     CloseGroupCommand = function(subself)
       if self.last_type == "Group" then
         subself:finishtweening()
-               :queuecommand("AfterUpdate")
+               :queuecommand("OnCloseGroup")
+               :linear(0.1)
+               :x(get_x())
       else
         subself:finishtweening()
                :tween(0.2, "TweenType_Accelerate")
                :x(SCREEN_WIDTH/2 + 128)
-               :queuecommand("AfterUpdate")
+               :queuecommand("OnCloseGroup")
                :tween(0.2, "TweenType_Decelerate")
-               :x(self.is_focused and -50 or 0)
+               :x(get_x())
       end
     end,
   }
@@ -85,7 +97,7 @@ function MusicWheelEntry:create_actors(params)
              :diffuse(ThemeColor.Red)
     end,
 
-    UpdateCommand = function(subself)
+    ScrollCommand = function(subself)
       if (self.is_focused) then
       subself:stoptweening()
              :linear(0.2)
@@ -95,6 +107,12 @@ function MusicWheelEntry:create_actors(params)
                :linear(0.15)
                :zoomtowidth(0)
       end
+    end,
+
+    PageSwitchCommand = function(subself)
+      subself:zoomtowidth(0)
+             :sleep(0.5)
+             :queuecommand("Scroll")
     end,
 
     OpenGroupCommand = function(subself)
@@ -108,23 +126,36 @@ function MusicWheelEntry:create_actors(params)
     Font = "Common Normal",
     InitCommand = function(subself)
       subself:diffuse(ThemeColor.White)
+             :diffusebottomedge(Brightness(ThemeColor.White, 0.8))
              :halign(0)
     end,
 
-    AfterUpdateCommand = function(subself)
+    UpdateCommand = function(subself)
       subself:settext(self.data.title)
              :x(self.data.type == "Song" and 64+16 or 16)
     end,
 
-    OpenGroupCommand = function(subself)
-      if self.data.type ~= "Song" then return end
+    ScrollCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    PageSwitchCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    OnCloseGroupCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    OnOpenGroupCommand = function(subself)
+      subself:queuecommand("Update")
     end,
   }
 
   -- Difficulty level
   t[#t+1] = Def.BitmapText {
     Name = "Difficulty Level",
-    Font = "Common Normal",
+    Font = "MusicWheel Difficulty",
     InitCommand = function(subself)
       subself:diffuse(ThemeColor.White)
       :x(40)
@@ -134,15 +165,36 @@ function MusicWheelEntry:create_actors(params)
       :horizalign("HorizAlign_Center")
     end,
 
-    AfterUpdateCommand = function(subself)
+    UpdateCommand = function(subself)
       if (self.data.type == "Song") then
+        local color = DifficultyColors[self.data.difficulty]
+        local hsv_color = ColorToHSV(color)
+
         subself:settext(self.data.level)
-        :diffuse(DifficultyColors[self.data.difficulty])
+        :diffuse(color)
+        :diffusetopedge(color)
+        :diffusebottomedge(Hue(color, hsv_color.Hue + 25))
         :visible(true)
       else
         subself:visible(false)
       end
-    end
+    end,
+
+    ScrollCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    PageSwitchCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    OnCloseGroupCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
+
+    OnOpenGroupCommand = function(subself)
+      subself:queuecommand("Update")
+    end,
   }
 
   -- Clear lamp
@@ -155,7 +207,7 @@ function MusicWheelEntry:create_actors(params)
       :halign(0)
     end,
 
-    AfterUpdateCommand = function(subself)
+    UpdateCommand = function(subself)
       -- TODO: Fix flashing lights being stuck during scrolling
       -- and make them all sync with a global timer or something
       subself:stoptweening()
@@ -176,7 +228,7 @@ function MusicWheelEntry:create_actors(params)
         elseif table.find_index(self.data.score.award, { "StageAward_FullComboW3", "StageAward_SingleDigitW3", "StageAward_OneW3" }) ~= -1 then
           -- Full Combo Clear
           subself.flash_speed = 0.1
-          subself.flash_colors = { ThemeColor.Blue, ThemeColor.Yellow, ThemeColor.White }
+          subself.flash_colors = { ThemeColor.Red, ThemeColor.Yellow, ThemeColor.White, ThemeColor.Green }
           subself:queuecommand("Flash")
         elseif table.find_index(self.data.score.award, { "StageAward_FullComboW2", "StageAward_SingleDigitW2", "StageAward_OneW2" }) ~= -1 then
           -- Perfect Full Combo Clear
@@ -205,7 +257,27 @@ function MusicWheelEntry:create_actors(params)
       end
 
       subself:queuecommand("Flash")
-    end
+    end,
+
+    ScrollCommand = function(subself)
+      subself:stoptweening()
+             :queuecommand("Update")
+    end,
+
+    PageSwitchCommand = function(subself)
+      subself:stoptweening()
+             :queuecommand("Update")
+    end,
+
+    OnCloseGroupCommand = function(subself)
+      subself:stoptweening()
+             :queuecommand("Update")
+    end,
+
+    OnOpenGroupCommand = function(subself)
+      subself:stoptweening()
+             :queuecommand("Update")
+    end,
   }
   return container
 end
@@ -231,6 +303,11 @@ function MusicWheelEntry:transform(item_index, num_items, is_focus)
 end
 
 function MusicWheelEntry:set(data)
+  if (self.data ~= nil) then
+    self.last_type = self.data.type
+  else
+    self.last_type = "Group"
+  end
+
   self.data = data
-  self.container:queuecommand("Update")
 end
