@@ -23,17 +23,13 @@ function SongEntryData.create(song, steps)
   setmetatable( self, EntryData_mt )
 
   self.type = "Song"
+  self.song = song
   self.title = song:GetMainTitle()
   self.color = SONGMAN:GetSongColor(song)
   self.level = steps:GetMeter()
   self.difficulty = steps:GetDifficulty()
-  local get_difficulties = function (s)
-    return {
-      difficulty = s:GetDifficulty(),
-      level = s:GetMeter()
-    }
-  end
-  self.difficulties = table.map(song:GetStepsByStepsType(steps:GetStepsType()), get_difficulties)
+  self.all_steps = song:GetStepsByStepsType(steps:GetStepsType())
+
   self.music_preview  = {
     path = song:GetPreviewMusicPath(),
     sample_start = song:GetSampleStart(),
@@ -69,6 +65,19 @@ function SongEntryData.create(song, steps)
       return StageAwardIndex[a_stage_award] > StageAwardIndex[b_stage_award]
     end
     self.score.award = table.compare(high_scores, compare_stage_award):GetStageAward()
+
+    -- Calculate clear lamp state
+    if (self.score.grade == "Grade_Failed") then
+      self.clear_lamp = "Failed"
+    elseif table.find_index(self.score.award, { "StageAward_FullComboW3", "StageAward_SingleDigitW3", "StageAward_OneW3" }) ~= -1 then
+      self.clear_lamp = "FullCombo"
+    elseif table.find_index(self.score.award, { "StageAward_FullComboW2", "StageAward_SingleDigitW2", "StageAward_OneW2" }) ~= -1 then
+      self.clear_lamp = "PerfectFullCombo"
+    elseif self.score.award == "StageAward_FullComboW1" then
+      self.clear_lamp = "MarvelousFullCombo"
+    else
+      self.clear_lamp = "Clear"
+    end
   end
 
   return self

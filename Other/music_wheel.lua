@@ -1,6 +1,7 @@
 dofile(THEME:GetPathO("", "music_wheel_entry.lua"))
 dofile(THEME:GetPathO("", "music_wheel_song_view.lua"))
 dofile(THEME:GetPathO("", "entry_data.lua"))
+dofile(THEME:GetPathO("", "music_wheel_difficulty_menu.lua"))
 
 MusicWheel = {}
 MusicWheel_mt = { __index = MusicWheel }
@@ -14,6 +15,7 @@ function MusicWheel.create(sort_func)
 
   self.scroller = setmetatable({}, item_scroller_mt)
   self.song_view = MusicWheelSongView:create()
+  self.difficulty_menu = MusicWheelDifficultyMenu:create()
 
   return self
 end
@@ -31,13 +33,16 @@ function MusicWheel:create_actors()
     end,
   }
 
-  t[#t+1] = self.song_view:create_actors("Entry", 26, MusicWheelEntry_mt, SCREEN_CENTER_X + 128, -293)
+  t[#t+1] = self.song_view:create_actors()
+
+  t[#t+1] = self.difficulty_menu:create_actors()
 
   t[#t+1] = self.scroller:create_actors("Entry", 26, MusicWheelEntry_mt, SCREEN_CENTER_X + 128, -293)
 
   t[#t+1] = Def.Actor {
     OnCommand = function(subself)
       self:update_data(1)
+      self:update("Update")
       focused_wheel = self -- I don't know a good way to get the music wheel to the input callback!
       SCREENMAN:GetTopScreen():AddInputCallback(self.handle_input)
     end
@@ -48,7 +53,6 @@ end
 
 function MusicWheel:update_data(focus_index)
   self.scroller:set_info_set(self:get_entries(), focus_index)
-  self:update()
 end
 
 function MusicWheel:get_entries()
@@ -66,10 +70,11 @@ function MusicWheel:get_entries()
   return entries
 end
 
-function MusicWheel:update()
-  self.song_view.container:queuecommand("Update")
+function MusicWheel:update(command)
   local current_entry = self.scroller:get_info_at_focus_pos()
   self.song_view:set_current_entry(current_entry)
+  self.difficulty_menu:set_current_entry(current_entry)
+  self.container:queuecommand(command)
 end
 
 function MusicWheel:open_group(group_name)
@@ -82,11 +87,14 @@ end
 function MusicWheel:close_group()
   if (self.current_group == nil) then return end
   SOUND:PlayOnce(THEME:GetPathS("MusicWheel", "Close"), true)
-  self.container:queuecommand("CloseGroup")
 
   new_index = self:get_group_index(self.current_group)
   self.current_group = nil
   self:update_data(new_index)
+
+  SOUND:StopMusic()
+
+  self:update("CloseGroup")
 end
 
 function MusicWheel:get_group_index(group_name)
@@ -100,19 +108,32 @@ end
 function MusicWheel:scroll(amount)
   self.scroller:scroll_by_amount(amount)
 
-
-  if math.abs(amount) == 1 then
-    self.container:queuecommand("Scroll")
-  else
-    self.container:queuecommand("PageSwitch")
-  end
-
   SOUND:PlayOnce(THEME:GetPathS("Common", "value"), true)
 
   SOUND:StopMusic()
 
+  self:update(math.abs(amount) == 1 and "Scroll" or "PageSwitch")
+end
+
+function MusicWheel:scroll_difficulty(amount)
   local current_entry = self.scroller:get_info_at_focus_pos()
-  self.song_view:set_current_entry(current_entry)
+  if current_entry.type == "Song" then
+    local data = table.map(current_entry.all_steps, function(steps) return SongEntryData.create(current_entry.song, steps) end)
+    table.sort(data, function(a, b) return DifficultyIndex[a.difficulty] < DifficultyIndex[b.difficulty] end)
+    local current_difficulty_index = table.find_index(current_entry.difficulty, table.map(data, function(e) return e.difficulty end))
+    if current_difficulty_index+amount > #data or current_difficulty_index+amount < 1 then
+      return
+    end
+
+    local new_difficulty = data[current_difficulty_index+amount].difficulty
+
+    for i, v in ipairs(self.scroller.info_set) do
+      if v.song == current_entry.song and v.difficulty == new_difficulty then
+        self.scroller:scroll_to_pos(i)
+        self:update("PageSwitch")
+      end
+    end
+  end
 end
 
 function MusicWheel.handle_input(event)
@@ -120,6 +141,17 @@ function MusicWheel.handle_input(event)
 
   -- Ignore release event
   if event.type == "InputEventType_Release" then return end
+
+  local double_tap = false
+  if self.last_press ~= nil and event.type == "InputEventType_FirstPress" and self.last_press.button == event.GameButton and self.last_press.time + 0.3 >= GetTimeSinceStart() then
+    double_tap = true
+    self.last_press = nil
+  else
+    self.last_press = {
+      time = GetTimeSinceStart(),
+      button = event.GameButton
+    }
+  end
 
   if event.GameButton == "Start" then
     if event.type ~= "InputEventType_FirstPress" then return end
@@ -144,18 +176,14 @@ function MusicWheel.handle_input(event)
       -- if in group, close group
       self:close_group()
     end
-  elseif event.GameButton == "MenuDown" then
-    self:scroll(1)
-    self:update()
-  elseif event.GameButton == "MenuUp" then
-    self:scroll(-1)
-    self:update()
   elseif event.GameButton == "MenuLeft" then
-    self:scroll(-5)
-    self:update()
+    self:scroll(-1)
   elseif event.GameButton == "MenuRight" then
-    self:scroll(5)
-    self:update()
+    self:scroll(1)
+  elseif event.GameButton == "MenuDown" and double_tap then
+    self:scroll_difficulty(1)
+  elseif event.GameButton == "MenuUp" and double_tap then
+    self:scroll_difficulty(-1)
   end
 end
 

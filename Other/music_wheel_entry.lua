@@ -20,14 +20,8 @@ function MusicWheelEntry:create_actors(params)
       if self.is_focused then
         if self.data.type == "Song" then
           SOUND:PlayMusicPart(self.data.music_preview.path, self.data.music_preview.sample_start, self.data.music_preview.sample_length, 1, 1, true, true)
-        else
-          SOUND:StopMusic()
         end
       end
-    end,
-
-    OffCommand = function(subself)
-      SOUND:StopMusic()
     end,
 
     ScrollCommand = function(subself)
@@ -39,14 +33,6 @@ function MusicWheelEntry:create_actors(params)
       subself:sleep(0.1)
              :queuecommand("PlayPreview")
     end,
-
-    OpenGroupCommand = function(subself)
-      SOUND:StopMusic()
-    end,
-
-    CloseGroupCommand = function(subself)
-      SOUND:StopMusic()
-    end
   }
 
   local get_x = function()
@@ -314,51 +300,21 @@ function MusicWheelEntry:create_actors(params)
       -- and make them all sync with a global timer or something
 
       subself:stoptweening()
-      if (self.data.type == "Song") then
+
+      if (self.data.score ~= nil) then
         subself:visible(true)
-               :diffuse(ThemeColor.Black)
-        if (self.data.score == nil) then
-          -- No play
-          subself:visible(false)
-          return
-        end
-
-        subself:SetStateProperties({{ Frame = 0, Delay = 100 }})
-
-        if (self.data.score.grade == "Grade_Failed") then
-          -- Failed
-          subself.flash_speed = 0.03
-          subself.flash_colors = { ThemeColor.Red, Brightness(ThemeColor.Red, 0.8) }
-          subself:queuecommand("Flash")
-        elseif table.find_index(self.data.score.award, { "StageAward_FullComboW3", "StageAward_SingleDigitW3", "StageAward_OneW3" }) ~= -1 then
-          -- Full Combo Clear
-          subself.flash_speed = 0.1
-          subself.flash_colors = { ThemeColor.Red, ThemeColor.Yellow, ThemeColor.White, ThemeColor.Green }
-          subself:queuecommand("Flash")
-        elseif table.find_index(self.data.score.award, { "StageAward_FullComboW2", "StageAward_SingleDigitW2", "StageAward_OneW2" }) ~= -1 then
-          -- Perfect Full Combo Clear
-          subself.flash_speed = 0.06
-          subself.flash_colors = { ThemeColor.Red, ThemeColor.Yellow, ThemeColor.White, ThemeColor.Green }
-          subself:queuecommand("Flash")
-        elseif self.data.score.award == "StageAward_FullComboW1" then
-          -- Marevelous Full Combo Clear
-          subself.flash_speed = 0.04
-          subself.flash_colors = { ThemeColor.Red, ThemeColor.Yellow, ThemeColor.White, ThemeColor.Green }
-          subself:queuecommand("Flash")
-        else
-          -- Regular Clear
-          subself:diffuse(ThemeColor.Yellow)
-        end
+        subself:queuecommand("Flash")
       else
         subself:visible(false)
       end
     end,
 
     FlashCommand = function(subself)
+      lamp_state = ClearLampStates[self.data.clear_lamp]
       subself:stoptweening()
-      for i, color in ipairs(subself.flash_colors) do
+      for i, color in ipairs(lamp_state.flash_colors) do
         subself:diffuse(color)
-               :sleep(subself.flash_speed)
+               :sleep(lamp_state.flash_speed)
       end
 
       subself:queuecommand("Flash")

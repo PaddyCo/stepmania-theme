@@ -7,3 +7,8 @@ StageAwardIndex = {}
 for i, v in ipairs(StageAward) do
   StageAwardIndex[v] = i-1
 end
+
+DifficultyIndex = {}
+for i, v in ipairs(Difficulty) do
+  DifficultyIndex[v] = i-1
+end
