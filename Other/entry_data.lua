@@ -25,7 +25,15 @@ function SongEntryData.create(song, steps)
   self.type = "Song"
   self.title = song:GetMainTitle()
   self.color = SONGMAN:GetSongColor(song)
+  self.level = steps:GetMeter()
   self.difficulty = steps:GetDifficulty()
+  local get_difficulties = function (s)
+    return {
+      difficulty = s:GetDifficulty(),
+      level = s:GetMeter()
+    }
+  end
+  self.difficulties = table.map(song:GetStepsByStepsType(steps:GetStepsType()), get_difficulties)
   self.music_preview  = {
     path = song:GetPreviewMusicPath(),
     sample_start = song:GetSampleStart(),
@@ -33,7 +41,6 @@ function SongEntryData.create(song, steps)
   }
   self.banner = song:GetBannerPath()
   self.jacket = song:GetJacketPath()
-  self.level = steps:GetMeter()
   self.score = nil
   self.artist = song:GetDisplayArtist()
   self.group = song:GetGroupName()

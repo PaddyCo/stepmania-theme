@@ -68,9 +68,7 @@ function MusicWheelSongView:create_actors(params)
     Font = "MusicWheel SongviewTitle",
     InitCommand = function(subself)
       subself:halign(1)
-             :diffuse(ThemeColor.Black)
-             :shadowcolor(ThemeColor.Black)
-             :shadowlength(1)
+             :diffuse(ThemeColor.White)
              :x(-MARGIN_X)
              :y(TITLE_Y)
     end,
@@ -80,11 +78,11 @@ function MusicWheelSongView:create_actors(params)
              :settext(self.current_entry.title)
              :scaletofit(0, 0, SCREEN_WIDTH/3, MARGIN_X)
              :y(TITLE_Y)
-             :diffuse(Alpha(ThemeColor.White, 0.0))
+             :diffusealpha(0)
              :x(-128)
              :tween(0.2, "TweenType_Decelerate")
              :x(-MARGIN_X)
-             :diffuse(Alpha(ThemeColor.White, 1))
+             :diffusealpha(1)
     end
   }
 
@@ -93,6 +91,7 @@ function MusicWheelSongView:create_actors(params)
     Font = "Common Body",
     InitCommand = function(subself)
       subself:halign(1)
+             :diffuse(ThemeColor.White)
              :visible(false)
     end,
 
@@ -142,29 +141,50 @@ function MusicWheelSongView:create_actors(params)
   }
 
   t[#t+1] = Def.BitmapText {
+    Name = "Entry BPM Label",
+    Font = "MusicWheel SongViewTitle",
+
+    InitCommand = function(subself)
+      subself:halign(1)
+             :diffuse(ThemeColor.White)
+             :settext("BPM")
+             :x(-MARGIN_X)
+             :visible(true)
+             :y(TITLE_Y + 128)
+    end,
+
+    UpdateCommand = function(subself)
+      subself:stoptweening()
+             :linear(0.1)
+             :diffusealpha(self.current_entry.bpm ~= nil and 1 or 0)
+    end
+  }
+
+
+  t[#t+1] = Def.BitmapText {
     Name = "Entry BPM",
     Font = "MusicWheel SongViewTitle",
     InitCommand = function(subself)
-      subself.bpm = 0
       subself:halign(1)
              :diffuse(ThemeColor.White)
-             :x(-MARGIN_X)
+             :x(-(MARGIN_X + 102))
              :visible(true)
     end,
 
     UpdateCommand = function(subself)
       if (self.current_entry.bpm ~= nil) then
         local text = ""
+
         if self.current_entry.bpm[1] == self.current_entry.bpm[2] then
-          text = self.current_entry.bpm[1] .. " BPM"
+          text = self.current_entry.bpm[1]
         else
-          text = self.current_entry.bpm[1] .. "~" .. self.current_entry.bpm[2] .. " BPM"
+          text = self.current_entry.bpm[1] .. "~" .. self.current_entry.bpm[2]
         end
         subself:finishtweening()
                :diffusealpha(0)
                :visible(true)
                :settext(text)
-               :y(TITLE_Y + 64)
+               :y(TITLE_Y + 100)
                :linear(0.15)
                :diffusealpha(1)
                :y(TITLE_Y + 128)

@@ -109,6 +109,8 @@ function MusicWheel:scroll(amount)
 
   SOUND:PlayOnce(THEME:GetPathS("Common", "value"), true)
 
+  SOUND:StopMusic()
+
   local current_entry = self.scroller:get_info_at_focus_pos()
   self.song_view:set_current_entry(current_entry)
 end
