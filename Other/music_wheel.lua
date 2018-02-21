@@ -6,6 +6,13 @@ dofile(THEME:GetPathO("", "music_wheel_difficulty_menu.lua"))
 MusicWheel = {}
 MusicWheel_mt = { __index = MusicWheel }
 
+-- TODO: Correctly deal with player joining, setting styles etc.
+-- This is just a dirty hack for now :)
+GAMESTATE:JoinPlayer("PlayerNumber_P1")
+GAMESTATE:UnjoinPlayer("PlayerNumber_P2")
+GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
+GAMESTATE:SetCurrentStyle(GAMEMAN:GetStylesForGame("dance")[1])
+
 function MusicWheel.create(sort_func)
   local self = {}
   setmetatable( self, MusicWheel_mt )
@@ -41,7 +48,16 @@ function MusicWheel:create_actors()
 
   t[#t+1] = Def.Actor {
     OnCommand = function(subself)
+      if (GAMESTATE:GetCurrentSong() ~= nil) then
+        self.current_group = GAMESTATE:GetCurrentSong():GetGroupName()
+      end
+
       self:update_data(1)
+
+      local current_steps = GAMESTATE:GetCurrentSteps("PlayerNumber_P1")
+      if current_steps ~= nil then
+        self:scroll_to_steps(GAMESTATE:GetCurrentSteps("PlayerNumber_P1"))
+      end
       self:update("Update")
       focused_wheel = self -- I don't know a good way to get the music wheel to the input callback!
       SCREENMAN:GetTopScreen():AddInputCallback(self.handle_input)
@@ -125,19 +141,23 @@ function MusicWheel:scroll_difficulty(amount)
       return
     end
 
-    local new_difficulty = data[current_difficulty_index+amount].difficulty
+    self:scroll_to_steps(data[current_difficulty_index+amount].steps)
+  end
+end
 
+function MusicWheel:scroll_to_steps(steps)
     for i, v in ipairs(self.scroller.info_set) do
-      if v.song == current_entry.song and v.difficulty == new_difficulty then
+      if v.steps == steps then
         self.scroller:scroll_to_pos(i)
         self:update("PageSwitch")
       end
     end
-  end
 end
 
 function MusicWheel.handle_input(event)
   local self = focused_wheel
+
+  SM(GAMESTATE:GetCurrentSong():GetMainTitle())
 
   -- Ignore release event
   if event.type == "InputEventType_Release" then return end
@@ -165,7 +185,18 @@ function MusicWheel.handle_input(event)
       end
     elseif current_entry.type == "Song" then
       SOUND:PlayOnce(THEME:GetPathS("Common", "Start"), true)
-      SM(current_entry)
+
+      -- TODO: Correctly deal with player joining, setting styles etc.
+      -- This is just a dirty hack for now :)
+      GAMESTATE:SetCurrentSong(current_entry.song)
+      GAMESTATE:SetCurrentSteps("PlayerNumber_P1", current_entry.steps)
+
+      local can, reason = GAMESTATE:CanSafelyEnterGameplay()
+      if can then
+        SCREENMAN:SetNewScreen("ScreenGameplay")
+      else
+        lua.ReportScriptError("Cannot safely enter gameplay: " .. tostring(reason))
+      end
     end
   elseif event.GameButton == "Back" then
     if self.current_group == nil then

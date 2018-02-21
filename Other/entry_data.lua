@@ -24,6 +24,7 @@ function SongEntryData.create(song, steps)
 
   self.type = "Song"
   self.song = song
+  self.steps = steps
   self.title = song:GetMainTitle()
   self.color = SONGMAN:GetSongColor(song)
   self.level = steps:GetMeter()
