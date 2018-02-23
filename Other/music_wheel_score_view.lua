@@ -10,5 +10,267 @@ function MusicWheelScoreView:create()
 end
 
 function MusicWheelScoreView:create_actors(params)
-  local t = Def.ActorFrame {}
+  local t = Def.ActorFrame {
+    InitCommand = function(subself)
+      self.container = subself
+      subself:x(SCREEN_CENTER_X - 195)
+             :y(SCREEN_HEIGHT + 100)
+    end,
+
+    UpdateCommand = function(subself)
+      subself:stoptweening()
+             :linear(0.1)
+             :y(self.entry.type == "Group" and SCREEN_HEIGHT+100 or SCREEN_HEIGHT - 70)
+    end
+  }
+
+  t[#t+1] = Def.Quad {
+    InitCommand = function(subself)
+      subself:zoomto(512, 140)
+             :y(-30)
+             :diffuse(ThemeColor.Black)
+             :diffusealpha(0.5)
+    end
+  }
+
+  t[#t+1] = Def.BitmapText {
+    Name = "Score Label",
+    Font = "Common Body",
+
+    InitCommand = function(subself)
+      subself:settext(string.upper(THEME:GetString("ScoreView", "Score")))
+             :halign(0)
+             :zoom(0.5)
+             :y(-70)
+             :x(-232)
+    end
+  }
+
+  t[#t+1] = Def.BitmapText {
+    Name = "Score",
+    Font = "Score Regular",
+
+    InitCommand = function(subself)
+      subself:diffuse(ThemeColor.White)
+             :zoom(0.5)
+             :y(-70)
+             :x(-54)
+             :halign(0)
+
+      self.score = 0
+    end,
+
+    UpdateCommand = function(subself)
+      local new_score = self.entry.score ~= nil and self.entry.score.best_score_rounded or 0
+      if new_score == self.score then return end
+
+      subself:stoptweening()
+
+
+      for i=self.score, new_score, (new_score - self.score)/10 do
+        subself:aux(math.floor(i))
+               :queuecommand("Refresh")
+               :sleep(0.03)
+      end
+      self.score = new_score
+
+      subself:aux(new_score)
+             :queuecommand("Finish")
+
+    end,
+
+    RefreshCommand = function(subself)
+      subself:settext(format_num(subself:getaux(), 0))
+    end,
+
+    FinishCommand = function(subself)
+      subself:settext(format_num(self.score, 0))
+    end
+  }
+
+  t[#t+1] = Def.BitmapText {
+    Name = "Miss Count Label",
+    Font = "Common Body",
+
+    InitCommand = function(subself)
+      subself:settext(string.upper(THEME:GetString("ScoreView", "MissCount")))
+             :halign(0)
+             :zoom(0.5)
+             :y(-32)
+             :x(-232)
+    end
+  }
+
+  t[#t+1] = Def.BitmapText {
+    Name = "Grade",
+    Font = "Common Body",
+
+    InitCommand = function(subself)
+      subself:diffuse(ThemeColor.Yellow)
+             :y(-32)
+             :x(175)
+             :halign(0.5)
+    end,
+
+    UpdateCommand = function(subself)
+      if self.entry.score == nil then
+        subself:linear(0.1)
+               :diffusealpha(0)
+               :x(200)
+        return
+      end
+
+      subself:linear(0.1)
+             :diffusealpha(1)
+             :x(175)
+             :settext(self.entry.score.best_grade)
+    end,
+  }
+
+  t[#t+1] = Def.BitmapText {
+    Name = "Miss Count",
+    Font = "Score Regular",
+
+    InitCommand = function(subself)
+      subself:diffuse(ThemeColor.White)
+             :y(-32)
+             :x(-54)
+             :zoom(0.5)
+             :halign(0)
+
+      self.last_miss_count = 0
+    end,
+
+    UpdateCommand = function(subself)
+      subself:stoptweening()
+      if self.entry.score == nil then
+        self.last_miss_count = 0
+        subself:settext("")
+        return
+      end
+
+      local miss_count = self.entry.score.miss_count or 0
+      if miss_count == self.last_miss_count then
+        subself:settext(miss_count)
+        return
+      end
+
+      for i=self.last_miss_count, miss_count, (miss_count - self.last_miss_count)/10 do
+        subself:aux(math.floor(i))
+               :queuecommand("Refresh")
+               :sleep(0.03)
+      end
+
+      self.last_miss_count = miss_count
+      subself:queuecommand("Finish")
+    end,
+
+    RefreshCommand = function(subself)
+      subself:settext(subself:getaux())
+    end,
+
+    FinishCommand = function(subself)
+      subself:settext(self.entry.score.miss_count)
+    end
+  }
+
+  t[#t+1] = Def.BitmapText {
+    Name = "Clear State",
+    Font = "Common Body",
+
+    InitCommand = function(subself)
+      subself:settext("")
+             :halign(0)
+             :zoom(0.5)
+             :y(6)
+             :x(-232)
+    end,
+
+    UpdateCommand = function(subself)
+      subself:stoptweening()
+      if self.entry.type == "Group" or self.entry.score == nil then
+        subself:linear(0.1)
+               :diffuse(ThemeColor.White)
+               :diffusealpha(0.5)
+               :settext("NO PLAY")
+        return
+      end
+
+      subself:linear(0.1)
+             :diffusealpha(1)
+
+      if self.entry.clear_lamp == "Failed" then
+        subself:settext(string.upper(THEME:GetString("ClearState", "Failed")))
+      elseif self.entry.clear_lamp == "FullCombo" then
+        subself:settext(string.upper(THEME:GetString("ClearState", "FullCombo")))
+      elseif self.entry.clear_lamp == "PerfectFullCombo" then
+        subself:settext(string.upper(THEME:GetString("ClearState", "PerfectFullCombo")))
+      elseif self.entry.clear_lamp == "MarvelousFullCombo" then
+        subself:settext(string.upper(THEME:GetString("ClearState", "MarvelousFullCombo")))
+      else
+        subself:settext(string.upper(THEME:GetString("ClearState", "Clear")))
+      end
+
+      subself:queuecommand("Flash")
+    end,
+
+    FlashCommand = function(subself)
+      if self.entry.clear_lamp == nil then
+        subself:stoptweening()
+        return
+      end
+
+      local lamp_state = ClearLampStates[self.entry.clear_lamp]
+      subself:stoptweening()
+      for i, color in ipairs(lamp_state.flash_colors) do
+        subself:diffuse(color)
+               :sleep(lamp_state.flash_speed)
+      end
+
+      subself:queuecommand("Flash")
+    end
+  }
+
+  t[#t+1] = Def.Quad {
+    InitCommand = function(subself)
+      subself:zoomto(0, 16)
+             :halign(0)
+             :x(-256)
+             :y(32)
+    end,
+
+    UpdateCommand = function(subself)
+      local max_width = 512
+      local percentage = self.entry.score ~= nil and self.entry.score.best_score / 1000000 or 0
+      subself:stoptweening()
+             :linear(0.1)
+             :zoomto(max_width * percentage, 16)
+
+      if self.entry.score ~= nil then
+        subself:queuecommand("Flash")
+      end
+    end,
+
+    FlashCommand = function(subself)
+      if self.entry.clear_lamp == nil then
+        subself:stoptweening()
+        return
+      end
+      local lamp_state = ClearLampStates[self.entry.clear_lamp]
+      subself:stoptweening()
+      for i, color in ipairs(lamp_state.flash_colors) do
+        subself:diffuse(color)
+               :sleep(lamp_state.flash_speed)
+      end
+
+        subself:queuecommand("Flash")
+    end
+  }
+
+  return t
+end
+
+function MusicWheelScoreView:set_current_entry(entry)
+  self.entry = entry
+  self.container:queuecommand("Update")
 end

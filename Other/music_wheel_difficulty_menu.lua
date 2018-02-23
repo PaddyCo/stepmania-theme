@@ -14,7 +14,7 @@ function MusicWheelDifficultyMenu:create_actors(params)
     InitCommand = function(subself)
       self.container = subself
 
-      subself:y(64)
+      subself:y(190)
     end
   }
 

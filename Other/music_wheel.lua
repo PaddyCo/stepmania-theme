@@ -2,6 +2,7 @@ dofile(THEME:GetPathO("", "music_wheel_entry.lua"))
 dofile(THEME:GetPathO("", "music_wheel_song_view.lua"))
 dofile(THEME:GetPathO("", "entry_data.lua"))
 dofile(THEME:GetPathO("", "music_wheel_difficulty_menu.lua"))
+dofile(THEME:GetPathO("", "music_wheel_score_view.lua"))
 
 MusicWheel = {}
 MusicWheel_mt = { __index = MusicWheel }
@@ -23,6 +24,7 @@ function MusicWheel.create(sort_func)
   self.scroller = setmetatable({}, item_scroller_mt)
   self.song_view = MusicWheelSongView:create()
   self.difficulty_menu = MusicWheelDifficultyMenu:create()
+  self.score_view = MusicWheelScoreView:create()
 
   return self
 end
@@ -38,13 +40,51 @@ function MusicWheel:create_actors()
       :linear(0.05)
       :x(self.is_focused and -50 or 0)
     end,
+
+    StartSongCommand = function(subself)
+      subself:sleep(0.5)
+             :queuecommand("ActuallyStartSong")
+    end,
+
+    ActuallyStartSongCommand = function(subself)
+      SCREENMAN:SetNewScreen("ScreenPrepare")
+    end
   }
 
-  t[#t+1] = self.song_view:create_actors()
 
   t[#t+1] = self.difficulty_menu:create_actors()
 
+  t[#t+1] = self.score_view:create_actors()
+
   t[#t+1] = self.scroller:create_actors("Entry", 26, MusicWheelEntry_mt, SCREEN_CENTER_X + 128, -293)
+
+  t[#t+1] = self.song_view:create_actors()
+
+  t[#t+1] = Def.BitmapText {
+    Font = "Common Header",
+    InitCommand = function(subself)
+      subself:settext("Select Music")
+             :halign(0)
+             :valign(0)
+             :x(16)
+             :y(16)
+             :zoom(0.25)
+             :diffuse(ThemeColor.Black)
+    end
+  }
+
+  t[#t+1] = Def.BitmapText {
+    Font = "Common Header",
+    InitCommand = function(subself)
+      subself:settext(THEME:GetString("Stage", GAMESTATE:GetCurrentStage()))
+             :halign(0)
+             :valign(0)
+             :x(12)
+             :y(48)
+             :zoom(0.5)
+             :diffuse(ThemeColor.Black)
+    end
+  }
 
   t[#t+1] = Def.Actor {
     OnCommand = function(subself)
@@ -90,6 +130,7 @@ function MusicWheel:update(command)
   local current_entry = self.scroller:get_info_at_focus_pos()
   self.song_view:set_current_entry(current_entry)
   self.difficulty_menu:set_current_entry(current_entry)
+  self.score_view:set_current_entry(current_entry)
   self.container:queuecommand(command)
 end
 
@@ -146,18 +187,18 @@ function MusicWheel:scroll_difficulty(amount)
 end
 
 function MusicWheel:scroll_to_steps(steps)
-    for i, v in ipairs(self.scroller.info_set) do
-      if v.steps == steps then
-        self.scroller:scroll_to_pos(i)
-        self:update("PageSwitch")
-      end
+  for i, v in ipairs(self.scroller.info_set) do
+    if v.steps == steps then
+      self.scroller:scroll_to_pos(i)
+      self:update("PageSwitch")
     end
+  end
 end
 
 function MusicWheel.handle_input(event)
   local self = focused_wheel
 
-  SM(GAMESTATE:GetCurrentSong():GetMainTitle())
+  if self.ignore_input then return end
 
   -- Ignore release event
   if event.type == "InputEventType_Release" then return end
@@ -189,16 +230,19 @@ function MusicWheel.handle_input(event)
       -- TODO: Correctly deal with player joining, setting styles etc.
       -- This is just a dirty hack for now :)
       GAMESTATE:SetCurrentSong(current_entry.song)
+      SOUND:StopMusic()
       GAMESTATE:SetCurrentSteps("PlayerNumber_P1", current_entry.steps)
 
       local can, reason = GAMESTATE:CanSafelyEnterGameplay()
       if can then
-        SCREENMAN:SetNewScreen("ScreenGameplay")
+        self.ignore_input = true
+        self.container:queuecommand("StartSong")
       else
         lua.ReportScriptError("Cannot safely enter gameplay: " .. tostring(reason))
       end
     end
   elseif event.GameButton == "Back" then
+    if event.type ~= "InputEventType_FirstPress" then return end
     if self.current_group == nil then
       -- if at root, go back to main menu
       SOUND:PlayOnce(THEME:GetPathS("Common", "Start"), true)

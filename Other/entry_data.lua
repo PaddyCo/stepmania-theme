@@ -51,11 +51,36 @@ function SongEntryData.create(song, steps)
   if high_scores ~= nil and #high_scores > 0 then
     self.score = {}
 
-    -- Get highest grade
+    -- Get highest score
     local compare_grade = function(a, b)
       return GradeIndex[a:GetGrade()] < GradeIndex[b:GetGrade()]
     end
-    self.score.grade = table.compare(high_scores, compare_grade):GetGrade()
+
+    local highest_score = table.compare(high_scores, compare_grade)
+
+    self.score.best_score = get_score(steps, highest_score)
+    self.score.best_score_rounded = get_score(steps, highest_score, true)
+    self.score.best_grade = iif(highest_score:GetGrade() == "Grade_Failed", "E", grade_from_score(self.score.best_score))
+
+    local total_notes = steps:GetRadarValues("PlayerNumber_P1"):GetValue("RadarCategory_TapsAndHolds")
+
+    -- Get lowest miss count
+    local combine_misses = function(score)
+      local hits = 0
+
+      for i, v in ipairs({ "W3", "W2", "W1" }) do
+        hits = hits + score:GetTapNoteScore("TapNoteScore_" .. v)
+      end
+
+      return total_notes - hits
+    end
+
+
+    local compare_miss_count = function(a, b)
+      return combine_misses(a) < combine_misses(b)
+    end
+
+    self.score.miss_count = combine_misses(table.compare(high_scores, compare_miss_count))
 
     -- Get highest stage award
     local compare_stage_award = function(a, b)
@@ -68,7 +93,7 @@ function SongEntryData.create(song, steps)
     self.score.award = table.compare(high_scores, compare_stage_award):GetStageAward()
 
     -- Calculate clear lamp state
-    if (self.score.grade == "Grade_Failed") then
+    if highest_score:GetGrade() == "Grade_Failed" then
       self.clear_lamp = "Failed"
     elseif table.find_index(self.score.award, { "StageAward_FullComboW3", "StageAward_SingleDigitW3", "StageAward_OneW3" }) ~= -1 then
       self.clear_lamp = "FullCombo"

@@ -20,77 +20,6 @@ function MusicWheelSongView:create_actors(params)
     end
   }
 
-
-  t[#t+1] = Def.Banner {
-    Name = "Entry Song Jacket",
-    InitCommand = function(subself)
-      subself:halign(1)
-             :valign(1)
-             :visible(false)
-             :x(-MARGIN_X)
-             :y(SCREEN_CENTER_Y + 128)
-    end,
-
-    UpdateCommand = function(subself)
-      subself:finishtweening()
-
-      if self.current_entry.jacket == nil then
-        subself:visible(false)
-        return
-      end
-
-      local target_y = (TITLE_Y - 256) + 128
-
-      subself:LoadFromCachedBanner(self.current_entry.jacket)
-             :ScaleToClipped(256, 256)
-             :visible(true)
-             :zoom(2)
-             :skewy(0)
-             :diffusealpha(0)
-             :y(target_y + 128)
-             :tween(0.2, "TweenType_Decelerate")
-             :y(target_y)
-             :diffusealpha(1)
-    end,
-  }
-
-  t[#t+1] = Def.Banner {
-    Name = "Entry Song Banner",
-    InitCommand = function(subself)
-      subself:halign(1)
-             :valign(1)
-             :visible(false)
-             :x(-MARGIN_X)
-             :y(SCREEN_CENTER_Y + 128)
-    end,
-
-    UpdateCommand = function(subself)
-      subself:finishtweening()
-
-      if self.current_entry.jacket ~= nil then
-        subself:visible(false)
-        return
-      end
-      local target_y = (TITLE_Y - 256)
-
-      if (self.current_entry.type == "Group") then
-        subself:LoadFromSongGroup(self.current_entry.title)
-      else
-        subself:LoadFromSong(self.current_entry.song)
-      end
-
-      subself:visible(true)
-             :ScaleToClipped(256, 80)
-             :zoom(2)
-             :skewy(0)
-             :diffusealpha(0)
-             :y(target_y + 128)
-             :tween(0.2, "TweenType_Decelerate")
-             :y(target_y)
-             :diffusealpha(1)
-    end,
-  }
-
   t[#t+1] = Def.BitmapText {
     Name = "Entry Title",
     Font = "MusicWheel SongviewTitle",
@@ -273,6 +202,98 @@ function MusicWheelSongView:create_actors(params)
              :x(-MARGIN_X)
              :diffusealpha(1)
     end,
+  }
+
+  t[#t+1] = Def.Banner {
+    Name = "Entry Song Jacket",
+    InitCommand = function(subself)
+      subself:halign(1)
+             :valign(1)
+             :visible(false)
+             :x(-MARGIN_X)
+             :y(SCREEN_CENTER_Y + 128)
+    end,
+
+    UpdateCommand = function(subself)
+      subself:finishtweening()
+
+      if self.current_entry.jacket == nil then
+        subself:visible(false)
+        return
+      end
+
+      local target_y = (TITLE_Y - 256) + 128
+
+      subself:LoadFromCachedBanner(self.current_entry.jacket)
+             :ScaleToClipped(256, 256)
+             :visible(true)
+             :zoom(2)
+             :skewy(0)
+             :diffusealpha(0)
+             :y(target_y + 128)
+             :tween(0.2, "TweenType_Decelerate")
+             :y(target_y)
+             :diffusealpha(1)
+    end,
+
+    StartSongCommand = function(subself)
+      subself:stoptweening()
+             :diffusealpha(1)
+             :shadowcolor(Alpha(ThemeColor.Black, 0.5))
+             :tween(0.5, "TweenType_Decelerate")
+             :shadowlength(10)
+             :zoom(2.2)
+             :x(72 * subself:GetZoomX())
+             :y(SCREEN_CENTER_Y + (128 * subself:GetZoomX()) )
+    end
+  }
+
+  t[#t+1] = Def.Banner {
+    Name = "Entry Song Banner",
+    InitCommand = function(subself)
+      subself:halign(1)
+             :valign(1)
+             :visible(false)
+             :x(-MARGIN_X)
+             :y(SCREEN_CENTER_Y + 128)
+    end,
+
+    UpdateCommand = function(subself)
+      subself:finishtweening()
+
+      if self.current_entry.jacket ~= nil then
+        subself:visible(false)
+        return
+      end
+      local target_y = (TITLE_Y - 256)
+
+      if (self.current_entry.type == "Group") then
+        subself:LoadFromSongGroup(self.current_entry.title)
+      else
+        subself:LoadFromSong(self.current_entry.song)
+      end
+
+      subself:visible(true)
+             :ScaleToClipped(256, 80)
+             :zoom(2)
+             :skewy(0)
+             :diffusealpha(0)
+             :y(target_y + 128)
+             :tween(0.2, "TweenType_Decelerate")
+             :y(target_y)
+             :diffusealpha(1)
+    end,
+
+    StartSongCommand = function(subself)
+      subself:stoptweening()
+             :diffusealpha(1)
+             :shadowcolor(Alpha(ThemeColor.Black, 0.5))
+             :tween(0.5, "TweenType_Decelerate")
+             :shadowlength(10)
+             :zoom(2.2)
+             :x(72 * subself:GetZoomX())
+             :y(SCREEN_CENTER_Y + (40 * subself:GetZoomX()) )
+    end
   }
 
   return t
