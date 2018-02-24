@@ -46,46 +46,26 @@ function MusicWheelScoreView:create_actors(params)
     end
   }
 
-  t[#t+1] = Def.BitmapText {
+  t[#t+1] = Def.RollingNumbers {
     Name = "Score",
     Font = "Score Regular",
 
     InitCommand = function(subself)
+      self.score_text = subself
       subself:diffuse(ThemeColor.White)
              :zoom(0.5)
              :y(-70)
              :x(-54)
              :halign(0)
-
+             :set_chars_wide(7)
+             :set_approach_seconds(0.5)
+             :set_leading_attribute{ Diffuse=ThemeColor.Black }
       self.score = 0
     end,
 
     UpdateCommand = function(subself)
-      local new_score = self.entry.score ~= nil and self.entry.score.best_score_rounded or 0
-      if new_score == self.score then return end
-
-      subself:stoptweening()
-
-
-      for i=self.score, new_score, (new_score - self.score)/10 do
-        subself:aux(math.floor(i))
-               :queuecommand("Refresh")
-               :sleep(0.03)
-      end
-      self.score = new_score
-
-      subself:aux(new_score)
-             :queuecommand("Finish")
-
+      subself:target_number(self.entry.score ~= nil and self.entry.score.best_score_rounded or 0)
     end,
-
-    RefreshCommand = function(subself)
-      subself:settext(format_num(subself:getaux(), 0))
-    end,
-
-    FinishCommand = function(subself)
-      subself:settext(format_num(self.score, 0))
-    end
   }
 
   t[#t+1] = Def.BitmapText {
@@ -127,7 +107,7 @@ function MusicWheelScoreView:create_actors(params)
     end,
   }
 
-  t[#t+1] = Def.BitmapText {
+  t[#t+1] = Def.RollingNumbers {
     Name = "Miss Count",
     Font = "Score Regular",
 
@@ -137,41 +117,16 @@ function MusicWheelScoreView:create_actors(params)
              :x(-54)
              :zoom(0.5)
              :halign(0)
+             :set_chars_wide(4)
+             :set_approach_seconds(0.5)
+             :set_leading_attribute{ Diffuse=ThemeColor.Black }
 
-      self.last_miss_count = 0
     end,
 
     UpdateCommand = function(subself)
-      subself:stoptweening()
-      if self.entry.score == nil then
-        self.last_miss_count = 0
-        subself:settext("")
-        return
-      end
-
-      local miss_count = self.entry.score.miss_count or 0
-      if miss_count == self.last_miss_count then
-        subself:settext(miss_count)
-        return
-      end
-
-      for i=self.last_miss_count, miss_count, (miss_count - self.last_miss_count)/10 do
-        subself:aux(math.floor(i))
-               :queuecommand("Refresh")
-               :sleep(0.03)
-      end
-
-      self.last_miss_count = miss_count
-      subself:queuecommand("Finish")
+      local miss_count = self.entry.score and self.entry.score.miss_count or 0
+      subself:target_number(miss_count)
     end,
-
-    RefreshCommand = function(subself)
-      subself:settext(subself:getaux())
-    end,
-
-    FinishCommand = function(subself)
-      subself:settext(self.entry.score.miss_count)
-    end
   }
 
   t[#t+1] = Def.BitmapText {
