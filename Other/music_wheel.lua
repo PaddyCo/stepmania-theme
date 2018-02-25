@@ -3,6 +3,7 @@ dofile(THEME:GetPathO("", "music_wheel_song_view.lua"))
 dofile(THEME:GetPathO("", "entry_data.lua"))
 dofile(THEME:GetPathO("", "music_wheel_difficulty_menu.lua"))
 dofile(THEME:GetPathO("", "music_wheel_score_view.lua"))
+dofile(THEME:GetPathO("", "modifier_options_menu.lua"))
 
 MusicWheel = {}
 MusicWheel_mt = { __index = MusicWheel }
@@ -10,8 +11,7 @@ MusicWheel_mt = { __index = MusicWheel }
 -- TODO: Correctly deal with player joining, setting styles etc.
 -- This is just a dirty hack for now :)
 GAMESTATE:JoinPlayer("PlayerNumber_P1")
-GAMESTATE:JoinPlayer("PlayerNumber_P2")
-GAMESTATE:SetMultiplayer(false)
+GAMESTATE:UnjoinPlayer("PlayerNumber_P2")
 GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
 GAMESTATE:SetCurrentStyle(GAMEMAN:GetStylesForGame("dance")[GAMESTATE:GetNumSidesJoined()])
 
@@ -100,8 +100,6 @@ function MusicWheel:create_actors()
         self:scroll_to_steps(GAMESTATE:GetCurrentSteps("PlayerNumber_P1"))
       end
       self:update("Update")
-      focused_wheel = self -- I don't know a good way to get the music wheel to the input callback!
-      SCREENMAN:GetTopScreen():AddInputCallback(self.handle_input)
     end
   }
 
@@ -196,27 +194,21 @@ function MusicWheel:scroll_to_steps(steps)
   end
 end
 
-function MusicWheel.handle_input(event)
-  local self = focused_wheel
-
+function MusicWheel:handle_input(event)
   if self.ignore_input then return end
-
-  -- Ignore release event
-  if event.type == "InputEventType_Release" then return end
 
   local double_tap = false
   if self.last_press ~= nil and event.type == "InputEventType_FirstPress" and self.last_press.button == event.GameButton and self.last_press.time + 0.3 >= GetTimeSinceStart() then
     double_tap = true
     self.last_press = nil
-  else
+  elseif event.type == "InputEventType_FirstPress" then
     self.last_press = {
       time = GetTimeSinceStart(),
       button = event.GameButton
     }
   end
 
-  if event.GameButton == "Start" then
-    if event.type ~= "InputEventType_FirstPress" then return end
+  if event.GameButton == "Start" and event.type == "InputEventType_Release" then
     local current_entry = self.scroller:get_info_at_focus_pos()
 
     if current_entry.type == "Group" then
@@ -244,8 +236,7 @@ function MusicWheel.handle_input(event)
         lua.ReportScriptError("Cannot safely enter gameplay: " .. tostring(reason))
       end
     end
-  elseif event.GameButton == "Back" then
-    if event.type ~= "InputEventType_FirstPress" then return end
+  elseif event.GameButton == "Back" and event.type == "InputEventType_FirstPress" then
     if self.current_group == nil then
       -- if at root, go back to main menu
       SOUND:PlayOnce(THEME:GetPathS("Common", "Start"), true)
@@ -254,9 +245,11 @@ function MusicWheel.handle_input(event)
       -- if in group, close group
       self:close_group()
     end
-  elseif event.GameButton == "MenuLeft" then
+  elseif event.GameButton == "Start" and event.type == "InputEventType_Repeat" then
+    GLOBAL.PushInputFocus("ModifierOptions")
+  elseif event.GameButton == "MenuLeft" and event.type ~= "InputEventType_Release" then
     self:scroll(-1)
-  elseif event.GameButton == "MenuRight" then
+  elseif event.GameButton == "MenuRight" and event.type ~= "InputEventType_Release" then
     self:scroll(1)
   elseif event.GameButton == "MenuDown" and double_tap then
     self:scroll_difficulty(1)
