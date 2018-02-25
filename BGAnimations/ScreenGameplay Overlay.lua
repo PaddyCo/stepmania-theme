@@ -109,8 +109,8 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
 
 
   -- Life display
-  local LIFE_FRAME_WIDTH = 644
-  local LIFE_FRAME_HEIGHT = 32
+  local LIFE_FRAME_WIDTH = 650
+  local LIFE_FRAME_HEIGHT = 34
   ---- Frame
   local life_frame = Def.ActorFrame {
     InitCommand = function(self)
@@ -196,8 +196,11 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
     Texture = THEME:GetPathG("", "Gameplay/LifeBar.png"),
     InitCommand = function(self)
       self:zoom(0.50)
-          :x(player_index == 1 and 11 or -11)
+          :diffuse(PlayerColors["PlayerNumber_P" .. player_index])
+          :x(player_index == 1 and 9 or -9)
           :rotationy(player_index == 1 and 0 or 180)
+          :shadowcolor(ThemeColor.Black)
+          :shadowlength(1)
     end
   }
 

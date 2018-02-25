@@ -233,6 +233,7 @@ function MusicWheel.handle_input(event)
       SOUND:StopMusic()
       GAMESTATE:SetCurrentSteps("PlayerNumber_P1", current_entry.steps)
       GAMESTATE:SetCurrentSteps("PlayerNumber_P2", current_entry.steps)
+      PREFSMAN:SetPreference("BGBrightness", 1)
 
       local can, reason = GAMESTATE:CanSafelyEnterGameplay()
       if can then

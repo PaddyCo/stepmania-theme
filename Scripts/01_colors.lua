@@ -17,6 +17,24 @@ DifficultyColors = {
   Difficulty_Edit      = ThemeColor.White,
 }
 
+JudgmentColors                = {
+  TapNoteScore_None           = ThemeColor.Red,
+  TapNoteScore_HitMine        = ThemeColor.Red,
+  TapNoteScore_AvoidMine      = ThemeColor.White,
+  TapNoteScore_CheckpointMiss = ThemeColor.Red,
+  TapNoteScore_Miss           = ThemeColor.Red,
+  TapNoteScore_W5             = ThemeColor.Red,
+  TapNoteScore_W4             = ThemeColor.Blue,
+  TapNoteScore_W3             = ThemeColor.Green,
+  TapNoteScore_W2             = ThemeColor.Yellow,
+  TapNoteScore_W1             = ThemeColor.Purple,
+  TapNoteScore_CheckpointHit  = ThemeColor.Green,
+  HoldNoteScore_None          = ThemeColor.Red,
+  HoldNoteScore_LetGo         = ThemeColor.Red,
+  HoldNoteScore_Held          = ThemeColor.Purple,
+  HoldNoteScore_MissedHold    = ThemeColor.Red,
+}
+
 PlayerColors = {
   PlayerNumber_P1 = ThemeColor.Red,
   PlayerNumber_P2 = ThemeColor.Blue
