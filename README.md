@@ -9,5 +9,6 @@ The issues are atm mostly for me to keep track of what I have left to do etc, I 
 
 ## Special Thanks
 
-Aaron C for his good documentation on various [DDR scoring systems](http://aaronin.jp/ddrssystem.html#ss10)
-kyzentun for the [consensual theme](https://github.com/AratnitY/consensual/), which was a huge inspiration (I can make my own stuff without messing around with the insanely obtuse metrics.ini file? Sold!)
+**Aaron C** for his good documentation on various [DDR scoring systems](http://aaronin.jp/ddrssystem.html#ss10)
+
+**kyzentun** for the [consensual theme](https://github.com/AratnitY/consensual/), which was a huge inspiration (I can make my own stuff without messing around with the insanely obtuse metrics.ini file? Sold!)
