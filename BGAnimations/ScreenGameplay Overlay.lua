@@ -1,20 +1,20 @@
 local t = Def.ActorFrame { }
 
 
-for player_index=1, #GAMESTATE:GetEnabledPlayers() do
+for player_index, player_number in ipairs(GAMESTATE:GetEnabledPlayers()) do
 
   -- Score display
   local SCORE_FRAME_WIDTH = 360
   ---- Frame
   local score_frame = Def.ActorFrame {
     InitCommand = function(self)
-      self:x(player_index == 1 and -SCORE_FRAME_WIDTH or SCREEN_WIDTH + SCORE_FRAME_WIDTH)
+      self:x(player_number == "PlayerNumber_P1" and -SCORE_FRAME_WIDTH or SCREEN_WIDTH + SCORE_FRAME_WIDTH)
           :y(SCREEN_HEIGHT - 96)
     end,
 
     OnCommand = function(self)
       self:tween(0.8, "TweenType_Decelerate")
-          :x(player_index == 1 and SCORE_FRAME_WIDTH/2 or SCREEN_WIDTH - SCORE_FRAME_WIDTH/2)
+          :x(player_number == "PlayerNumber_P1" and SCORE_FRAME_WIDTH/2 or SCREEN_WIDTH - SCORE_FRAME_WIDTH/2)
           :y(SCREEN_HEIGHT - 96)
     end
   }
@@ -23,9 +23,9 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
   score_frame[#score_frame+1] = Def.Sprite {
     Texture = THEME:GetPathG("", "Gameplay/ScoreHolder.png"),
     InitCommand = function(self)
-      self:diffuse(PlayerColors["PlayerNumber_P" .. player_index])
+      self:diffuse(PlayerColors[player_number])
           :zoom(0.60)
-          :rotationy(player_index == 1 and 0 or 180)
+          :rotationy(player_number == "PlayerNumber_P1" and 0 or 180)
     end
 
   }
@@ -44,7 +44,7 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
     end,
 
     ScoreChangedMessageCommand = function(self, data)
-      if data.PlayerNumber ~= "PlayerNumber_P" .. player_index then return end
+      if data.PlayerNumber ~= player_number then return end
 
       local stage_stats = STATSMAN:GetCurStageStats()
       self:target_number(get_score(GAMESTATE:GetCurrentSteps(data.PlayerNumber), stage_stats:GetPlayerStageStats(data.PlayerNumber), true))
@@ -55,12 +55,12 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
   score_frame[#score_frame+1] = Def.Sprite {
     Texture = THEME:GetPathG("", "Gameplay/DifficultyHolder.png"),
     InitCommand = function(self)
-      local difficulty = GAMESTATE:GetCurrentSteps("PlayerNumber_P" .. player_index):GetDifficulty()
+      local difficulty = GAMESTATE:GetCurrentSteps(player_number):GetDifficulty()
       self:diffuse(ThemeColor.Black)
           :zoom(0.60)
           :y(-58)
-          :x(player_index == 1 and -58 or 58)
-          :rotationy(player_index == 1 and 0 or 180)
+          :x(player_number == "PlayerNumber_P1" and -58 or 58)
+          :rotationy(player_number == "PlayerNumber_P1" and 0 or 180)
     end
 
   }
@@ -70,16 +70,16 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
     Font = "Common Body",
 
     InitCommand = function(self)
-      local difficulty = GAMESTATE:GetCurrentSteps("PlayerNumber_P" .. player_index):GetDifficulty()
+      local difficulty = GAMESTATE:GetCurrentSteps(player_number):GetDifficulty()
       self:diffuse(ThemeColor.White)
           :settext(THEME:GetString("Difficulty", difficulty))
           :diffuse(ThemeColor.White)
           :shadowcolor(ThemeColor.Black)
           :shadowlength(1)
           :zoom(0.5)
-          :halign(player_index == 1 and 1 or 0)
+          :halign(player_number == "PlayerNumber_P1" and 1 or 0)
           :y(-54)
-          :x(player_index == 1 and -35 or 35)
+          :x(player_number == "PlayerNumber_P1" and -35 or 35)
           :shadowcolor(ThemeColor.Black)
           :shadowlength(1)
     end,
@@ -90,16 +90,16 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
     Font = "MusicWheel Difficulty",
 
     InitCommand = function(self)
-      local meter = GAMESTATE:GetCurrentSteps("PlayerNumber_P" .. player_index):GetMeter()
-      local difficulty = GAMESTATE:GetCurrentSteps("PlayerNumber_P" .. player_index):GetDifficulty()
+      local meter = GAMESTATE:GetCurrentSteps(player_number):GetMeter()
+      local difficulty = GAMESTATE:GetCurrentSteps(player_number):GetDifficulty()
       self:diffuse(ThemeColor.White)
           :settext(meter)
           :diffuse(DifficultyColors[difficulty])
           :shadowcolor(ThemeColor.Black)
           :shadowlength(1)
-          :halign(player_index == 1 and 0 or 1)
+          :halign(player_number == "PlayerNumber_P1" and 0 or 1)
           :y(-54)
-          :x(player_index == 1 and -25 or 25)
+          :x(player_number == "PlayerNumber_P1" and -25 or 25)
           :shadowcolor(ThemeColor.Black)
           :shadowlength(1)
     end,
@@ -114,13 +114,13 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
   ---- Frame
   local life_frame = Def.ActorFrame {
     InitCommand = function(self)
-      self:x(player_index == 1 and PlayerP1X() or PlayerP2X())
+      self:x(player_number == "PlayerNumber_P1" and PlayerP1X() or PlayerP2X())
           :y(-48)
     end,
 
     OnCommand = function(self)
       self:tween(0.8, "TweenType_Decelerate" )
-          :x(player_index == 1 and PlayerP1X() or PlayerP2X())
+          :x(player_number == "PlayerNumber_P1" and PlayerP1X() or PlayerP2X())
           :y(48)
     end
   }
@@ -129,7 +129,7 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
   life_frame[#life_frame+1] = Def.Quad {
     InitCommand = function(self)
       self:zoomto(LIFE_FRAME_WIDTH, LIFE_FRAME_HEIGHT)
-          :diffuse(PlayerColors["PlayerNumber_P" .. player_index])
+          :diffuse(PlayerColors[player_number])
           :diffusealpha(0.4)
     end
 
@@ -139,13 +139,13 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
   life_frame[#life_frame+1] = Def.Quad {
     InitCommand = function(self)
       self:zoomto(0, LIFE_FRAME_HEIGHT)
-          :halign(player_index == 1 and 0 or 1)
-          :x(player_index == 1 and -LIFE_FRAME_WIDTH/2 or LIFE_FRAME_WIDTH/2)
+          :halign(player_number == "PlayerNumber_P1" and 0 or 1)
+          :x(player_number == "PlayerNumber_P1" and -LIFE_FRAME_WIDTH/2 or LIFE_FRAME_WIDTH/2)
           :diffuse(ThemeColor.Green)
     end,
 
     LifeChangedMessageCommand = function(self, data)
-      if data.Player ~= "PlayerNumber_P" .. player_index then return end
+      if data.Player ~= player_number then return end
 
       local life = data.LifeMeter:GetLife()
       local state = "Regular"
@@ -196,9 +196,9 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
     Texture = THEME:GetPathG("", "Gameplay/LifeBar.png"),
     InitCommand = function(self)
       self:zoom(0.50)
-          :diffuse(PlayerColors["PlayerNumber_P" .. player_index])
-          :x(player_index == 1 and 9 or -9)
-          :rotationy(player_index == 1 and 0 or 180)
+          :diffuse(PlayerColors[player_number])
+          :x(player_number == "PlayerNumber_P1" and 9 or -9)
+          :rotationy(player_number == "PlayerNumber_P1" and 0 or 180)
           :shadowcolor(ThemeColor.Black)
           :shadowlength(1)
     end

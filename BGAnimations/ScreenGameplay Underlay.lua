@@ -13,13 +13,17 @@ end
 local calculate_color = function(player)
   local stage_stats = STATSMAN:GetCurStageStats():GetPlayerStageStats(player)
 
+  -- If broken combo by letting go of hold note, color white
+  if stage_stats:GetHoldNoteScores("HoldNoteScore_LetGo") > 0 then return ThemeColor.White end
+
   local tap_judgments = { "Miss", "W4", "W3", "W2", "W1" }
 
   for i, v in ipairs(tap_judgments) do
     local t = "TapNoteScore_" .. v
 
-    local color = stage_stats:GetTapNoteScores(t) > 0 and JudgmentColors[t] or nil
+    local color
 
+    color = stage_stats:GetTapNoteScores(t) > 0 and JudgmentColors[t] or nil
 
     if color ~= nil then
       -- If Miss, color it white instead of it's intended color
@@ -28,11 +32,11 @@ local calculate_color = function(player)
   end
 end
 
-for player_index=1, #GAMESTATE:GetEnabledPlayers() do
+for player_index, player_number in ipairs(GAMESTATE:GetEnabledPlayers()) do
   -- Notefield Background
   t[#t+1] = Def.Quad {
     InitCommand = function(self)
-      self:x(player_index == 1 and PlayerP1X() or PlayerP2X())
+      self:x(player_number == "PlayerNumber_P1" and PlayerP1X() or PlayerP2X())
           :y(SCREEN_CENTER_Y)
           :zoomto(600, SCREEN_HEIGHT)
           :diffuse(Color.Black)
@@ -45,13 +49,13 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
   ---- Frame
   local combo_frame = Def.ActorFrame {
     InitCommand = function(self)
-      self:x(player_index == 1 and PlayerP1X() or PlayerP2X())
+      self:x(player_number == "PlayerNumber_P1" and PlayerP1X() or PlayerP2X())
           :y(SCREEN_CENTER_Y + 32)
           :visible(false)
     end,
 
     ComboChangedMessageCommand = function(self, data)
-      if data.Player ~= "PlayerNumber_P" .. player_index then return end
+      if data.Player ~= player_number then return end
 
 
       local combo = data.PlayerStageStats:GetCurrentCombo()
@@ -74,18 +78,19 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
     end,
   }
 
+  ---- Combo Number
   combo_frame[#combo_frame+1] = Def.BitmapText {
     Font = "Gameplay Combo",
 
     ComboChangedMessageCommand = function(self, data)
-      if data.Player ~= "PlayerNumber_P" .. player_index then return end
+      if data.Player ~= player_number then return end
 
       local combo = data.PlayerStageStats:GetCurrentCombo()
 
       if combo == data.OldCombo then return end
 
       local zoom = calculate_zoom_from_combo(combo)
-      local color = calculate_color("PlayerNumber_P" .. player_index)
+      local color = calculate_color(player_number)
 
       self:stoptweening()
           :settext(combo)
@@ -96,12 +101,13 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
           :linear(0.1)
           :diffusealpha(1)
           :zoom(zoom)
-          :x((-(zoom * 48)) + 16)
+          :x((-(zoom * 52)) + 16)
           :y(-(zoom * 18))
 
     end,
   }
 
+  ---- Combo Label
   combo_frame[#combo_frame+1] = Def.BitmapText {
     Font = "Common Body",
 
@@ -113,14 +119,14 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
     end,
 
     ComboChangedMessageCommand = function(self, data)
-      if data.Player ~= "PlayerNumber_P" .. player_index then return end
+      if data.Player ~= player_number then return end
 
       local combo = data.PlayerStageStats:GetCurrentCombo()
 
       if combo == data.OldCombo then return end
 
       local zoom = calculate_zoom_from_combo(combo)
-      local color = calculate_color("PlayerNumber_P" .. player_index)
+      local color = calculate_color(player_number)
 
       self:stoptweening()
           :Stroke(ThemeColor.White)
@@ -129,7 +135,7 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
           :diffuse(ColorLightTone(color))
           :diffusebottomedge(color)
           :linear(0.1)
-          :x((zoom * 48)+64)
+          :x((zoom * 52)+64)
 
     end,
   }
@@ -140,12 +146,12 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
   ---- Frame
   local judgment_frame = Def.ActorFrame {
     InitCommand = function(self)
-      self:x(player_index == 1 and PlayerP1X() or PlayerP2X())
+      self:x(player_number == "PlayerNumber_P1" and PlayerP1X() or PlayerP2X())
           :y(SCREEN_CENTER_Y - 130)
     end,
 
     JudgmentMessageCommand = function(self, data)
-      if data.Player ~= "PlayerNumber_P" .. player_index then return end
+      if data.Player ~= player_number then return end
       if data.TapNoteOffset == nil then return end
 
       self:stoptweening()
@@ -162,7 +168,7 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
     Font = "Gameplay Judgment",
 
     JudgmentMessageCommand = function(self, data)
-      if data.Player ~= "PlayerNumber_P" .. player_index then return end
+      if data.Player ~= player_number then return end
 
       if data.TapNoteOffset == nil then return end
 
@@ -202,13 +208,13 @@ for player_index=1, #GAMESTATE:GetEnabledPlayers() do
     Font = "Gameplay Judgment",
 
     InitCommand = function(self)
-      self:x(player_index == 1 and PlayerP1X() or PlayerP2X())
+      self:x(player_number == "PlayerNumber_P1" and PlayerP1X() or PlayerP2X())
           :y(SCREEN_CENTER_Y - 280)
           :zoom(0.85)
     end,
 
     JudgmentMessageCommand = function(self, data)
-      if data.Player ~= "PlayerNumber_P" .. player_index then return end
+      if data.Player ~= player_number then return end
 
       -- if TapNoteOffset is not nil, it's not a hold note
       if data.TapNoteOffset ~= nil then return end

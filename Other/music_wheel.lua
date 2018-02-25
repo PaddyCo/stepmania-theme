@@ -11,8 +11,9 @@ MusicWheel_mt = { __index = MusicWheel }
 -- This is just a dirty hack for now :)
 GAMESTATE:JoinPlayer("PlayerNumber_P1")
 GAMESTATE:JoinPlayer("PlayerNumber_P2")
+GAMESTATE:SetMultiplayer(false)
 GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
-GAMESTATE:SetCurrentStyle(GAMEMAN:GetStylesForGame("dance")[2])
+GAMESTATE:SetCurrentStyle(GAMEMAN:GetStylesForGame("dance")[GAMESTATE:GetNumSidesJoined()])
 
 function MusicWheel.create(sort_func)
   local self = {}
