@@ -2,6 +2,60 @@ local t = Def.ActorFrame { }
 
 
 for player_index, player_number in ipairs(GAMESTATE:GetEnabledPlayers()) do
+  -- Modifiers
+  local MOD_SIZE = 48
+
+  -- Frame
+  local mod_frame = Def.ActorFrame {
+    InitCommand = function(self)
+      self:x(-512)
+          :y(SCREEN_HEIGHT - 158)
+    end,
+
+    OnCommand = function(self)
+      self:sleep(0.5)
+          :tween(0.8, "TweenType_Decelerate")
+          :x(224)
+    end
+  }
+
+  ---- Loop trough modifiers
+  local mods = GAMESTATE:GetPlayerState(player_number):GetPlayerOptionsArray("ModsLevel_Preferred")
+  local mod_filter = function(a)
+    return a ~= "1x" and a ~= "Overhead"
+  end
+
+  for mod_index, mod in ipairs(table.find_all(mods, mod_filter)) do
+    ---- Modifier Frame
+    local m = Def.ActorFrame {
+      InitCommand = function(self)
+        self:x((MOD_SIZE + 16) * mod_index)
+      end,
+    }
+
+    ---- Background
+    m[#m+1] = Def.Quad {
+      InitCommand = function(self)
+        self:zoomto(MOD_SIZE, MOD_SIZE)
+            :diffuse(ThemeColor.Purple)
+            :diffusebottomedge(ColorDarkTone(ThemeColor.Purple))
+      end
+    }
+
+    ---- Label
+    m[#m+1] = Def.BitmapText {
+      Font = "Common body",
+      InitCommand = function(self)
+        local size = (MOD_SIZE/2) - 4
+        self:settext(mod)
+            :scaletofit(-size, -size, size, size)
+      end
+    }
+
+    mod_frame[#mod_frame+1] = m
+  end
+
+  t[#t+1] = mod_frame
 
   -- Score display
   local SCORE_FRAME_WIDTH = 360
@@ -205,7 +259,6 @@ for player_index, player_number in ipairs(GAMESTATE:GetEnabledPlayers()) do
   }
 
   t[#t+1] = life_frame
-
 end
 
 return t

@@ -18,7 +18,7 @@ local MENU_ENTRIES = {
     current_value = function(self, player_number)
       local options = GAMESTATE:GetPlayerState(player_number):GetPlayerOptions("ModsLevel_Preferred")
 
-      if options:MMod() ~= nil then return "Lowest BPM"
+      if options:MMod() ~= nil then return "M-Mod"
       else return "X" end
 
     end,
@@ -41,7 +41,7 @@ local MENU_ENTRIES = {
       local options = GAMESTATE:GetPlayerState(player_number):GetPlayerOptions("ModsLevel_Preferred")
 
       if options:MMod() ~= nil then
-        return options:MMod()
+        return tostring(options:MMod())
       else
         return tostring(options:XMod()) .. "x"
       end
