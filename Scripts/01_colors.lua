@@ -16,3 +16,8 @@ DifficultyColors = {
   Difficulty_Challenge = ThemeColor.Purple,
   Difficulty_Edit      = ThemeColor.White,
 }
+
+PlayerColors = {
+  PlayerNumber_P1 = ThemeColor.Red,
+  PlayerNumber_P2 = ThemeColor.Blue
+}

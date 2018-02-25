@@ -36,7 +36,7 @@ for i=1, 70 do
       local fall_speed = size * 0.8
       self:SetWidth(size)
       self:SetHeight(size)
-      self:diffuse(particle_color)
+      self:diffuse(particle_color or ThemeColor.White)
       self:xy(start_x, start_y)
       self:rotationz(math.random(360))
       self:rotationx(math.random(360))

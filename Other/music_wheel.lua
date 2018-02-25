@@ -10,9 +10,9 @@ MusicWheel_mt = { __index = MusicWheel }
 -- TODO: Correctly deal with player joining, setting styles etc.
 -- This is just a dirty hack for now :)
 GAMESTATE:JoinPlayer("PlayerNumber_P1")
-GAMESTATE:UnjoinPlayer("PlayerNumber_P2")
+GAMESTATE:JoinPlayer("PlayerNumber_P2")
 GAMESTATE:SetCurrentPlayMode("PlayMode_Regular")
-GAMESTATE:SetCurrentStyle(GAMEMAN:GetStylesForGame("dance")[1])
+GAMESTATE:SetCurrentStyle(GAMEMAN:GetStylesForGame("dance")[2])
 
 function MusicWheel.create(sort_func)
   local self = {}
@@ -232,6 +232,7 @@ function MusicWheel.handle_input(event)
       GAMESTATE:SetCurrentSong(current_entry.song)
       SOUND:StopMusic()
       GAMESTATE:SetCurrentSteps("PlayerNumber_P1", current_entry.steps)
+      GAMESTATE:SetCurrentSteps("PlayerNumber_P2", current_entry.steps)
 
       local can, reason = GAMESTATE:CanSafelyEnterGameplay()
       if can then

@@ -64,7 +64,13 @@ function MusicWheelScoreView:create_actors(params)
     end,
 
     UpdateCommand = function(subself)
-      subself:target_number(self.entry.score ~= nil and self.entry.score.best_score_rounded or 0)
+      local score = self.entry.score ~= nil and self.entry.score.best_score_rounded or 0
+
+      if (self.last_score == nil or self.last_score ~= score) then
+        subself:target_number(score)
+      end
+
+      self.last_score = score
     end,
   }
 
@@ -125,7 +131,12 @@ function MusicWheelScoreView:create_actors(params)
 
     UpdateCommand = function(subself)
       local miss_count = self.entry.score and self.entry.score.miss_count or 0
-      subself:target_number(miss_count)
+
+      if (self.last_miss_count == nil or self.last_miss_count ~= miss_count) then
+        subself:target_number(miss_count)
+      end
+
+      self.last_miss_count = miss_count
     end,
   }
 

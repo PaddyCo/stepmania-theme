@@ -147,30 +147,6 @@ local menu_options = {
     icon = ARCADE_ICON
   },
   {
-    label = "Course",
-    color = ThemeColor.Blue,
-    screen = "ScreenTitleMenu",
-    icon = COURSE_ICON
-  },
-  {
-    label = "Oni",
-    color = ThemeColor.Black,
-    screen = "ScreenTitleMenu",
-    icon = ARCADE_ICON
-  },
-  {
-    label = "Battle",
-    color = ThemeColor.Blue,
-    screen = "ScreenTitleMenu",
-    icon = ARCADE_ICON
-  },
-  {
-    label = "Profile",
-    screen = "ScreenTitleMenu",
-    color = ThemeColor.Blue,
-    icon = ARCADE_ICON
-  },
-  {
     label = "Options",
     screen = "ScreenOptionsService",
     color = ThemeColor.Blue,
